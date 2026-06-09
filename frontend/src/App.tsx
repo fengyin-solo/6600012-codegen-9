@@ -1,9 +1,9 @@
-import React from 'react'
 import { Canvas } from '@react-three/fiber'
 import { OrbitControls, Stars } from '@react-three/drei'
 import ParticleSystem from './components/ParticleSystem'
 import ControlPanel from './components/ControlPanel'
 import StatsOverlay from './components/StatsOverlay'
+import TutorialOverlay from './components/TutorialOverlay'
 
 export default function App() {
   return (
@@ -18,6 +18,7 @@ export default function App() {
           <OrbitControls makeDefault enableDamping />
         </Canvas>
         <StatsOverlay />
+        <TutorialOverlay />
       </div>
       <ControlPanel />
     </div>

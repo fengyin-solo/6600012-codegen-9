@@ -1,5 +1,6 @@
 import { useSimStore } from '../store/simulation'
 import type { SimMode } from '../types'
+import { TUTORIALS } from '../data/tutorials'
 
 const MODES: { value: SimMode; label: string; icon: string }[] = [
   { value: 'gravity', label: '重力吸引', icon: '🌍' },
@@ -17,10 +18,39 @@ const PRESETS = [
 
 export default function ControlPanel() {
   const store = useSimStore()
+  const activeTutorial = useSimStore(s => s.activeTutorial)
+  const startTutorial = useSimStore(s => s.startTutorial)
 
   return (
     <div className="w-80 bg-gray-900 border-l border-gray-700 p-4 overflow-y-auto flex flex-col gap-4">
       <h2 className="text-lg font-bold text-white">粒子物理模拟器</h2>
+
+      <div className="bg-gradient-to-br from-cyan-900/40 to-blue-900/40 border border-cyan-500/30 rounded-lg p-3">
+        <label className="text-xs text-cyan-300 block mb-2 flex items-center gap-1.5">
+          <span>🎓</span>
+          <span className="font-semibold">教学演示</span>
+        </label>
+        {activeTutorial ? (
+          <div className="text-xs text-cyan-100 bg-cyan-950/50 rounded-md px-3 py-2 border border-cyan-500/20">
+            正在进行：<span className="font-semibold">{activeTutorial.icon} {activeTutorial.name}</span>
+          </div>
+        ) : (
+          <div className="grid grid-cols-2 gap-2">
+            {TUTORIALS.map(t => (
+              <button
+                key={t.id}
+                onClick={() => startTutorial(t)}
+                className="flex flex-col items-start gap-1 p-2.5 rounded-lg bg-cyan-900/30 hover:bg-cyan-700/40 border border-cyan-500/20 hover:border-cyan-400/50 text-left transition-all group"
+                title={t.description}
+              >
+                <span className="text-xl group-hover:scale-110 transition-transform">{t.icon}</span>
+                <span className="text-xs text-cyan-100 font-medium leading-tight">{t.name}</span>
+                <span className="text-[10px] text-cyan-300/70">{t.steps.length} 步骤</span>
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
 
       {/* Mode */}
       <div>

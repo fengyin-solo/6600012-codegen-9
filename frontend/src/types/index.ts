@@ -25,3 +25,20 @@ export interface Preset {
   name: string
   params: Partial<SimulationParams>
 }
+
+export interface TutorialStep {
+  id: string
+  title: string
+  description: string
+  params?: Partial<SimulationParams>
+  highlightParams?: (keyof SimulationParams)[]
+  duration?: number
+}
+
+export interface Tutorial {
+  id: string
+  name: string
+  icon: string
+  description: string
+  steps: TutorialStep[]
+}

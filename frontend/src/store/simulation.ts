@@ -1,5 +1,5 @@
 import { create } from 'zustand'
-import type { SimMode, SimulationParams, Particle } from '../types'
+import type { SimMode, SimulationParams, Particle, Tutorial, TutorialStep } from '../types'
 
 const COLORS = ['#ff6b6b','#ffd93d','#6bcb77','#4d96ff','#c084fc','#f472b6','#38bdf8']
 
@@ -22,7 +22,19 @@ function randomParticles(count: number): Particle[] {
   }))
 }
 
-interface SimStore extends SimulationParams {
+interface TutorialState {
+  activeTutorial: Tutorial | null
+  currentStepIndex: number
+  isAutoPlaying: boolean
+  startTutorial: (tutorial: Tutorial) => void
+  nextStep: () => void
+  prevStep: () => void
+  stopTutorial: () => void
+  toggleAutoPlay: () => void
+  getCurrentStep: () => TutorialStep | null
+}
+
+interface SimStore extends SimulationParams, TutorialState {
   particles: Particle[]
   fps: number
   totalEnergy: number
@@ -47,6 +59,11 @@ export const useSimStore = create<SimStore>((set, get) => ({
   particles: randomParticles(300),
   fps: 0,
   totalEnergy: 0,
+
+  activeTutorial: null,
+  currentStepIndex: 0,
+  isAutoPlaying: false,
+
   setMode: (mode) => set({ mode }),
   setParticleCount: (count) => set({ particleCount: count, particles: randomParticles(count) }),
   setParam: (key, value) => set({ [key]: value } as any),
@@ -60,5 +77,65 @@ export const useSimStore = create<SimStore>((set, get) => ({
     set({ ...preset } as any)
     const { particleCount } = get()
     set({ particles: randomParticles(particleCount) })
+  },
+
+  startTutorial: (tutorial) => {
+    const firstStep = tutorial.steps[0]
+    if (firstStep?.params) {
+      set({ ...firstStep.params } as any)
+      if (firstStep.params.particleCount !== undefined) {
+        set({ particles: randomParticles(firstStep.params.particleCount) })
+      } else {
+        set({ particles: randomParticles(get().particleCount) })
+      }
+    }
+    set({ activeTutorial: tutorial, currentStepIndex: 0, isAutoPlaying: true })
+  },
+
+  nextStep: () => {
+    const { activeTutorial, currentStepIndex } = get()
+    if (!activeTutorial) return
+    const nextIdx = currentStepIndex + 1
+    if (nextIdx >= activeTutorial.steps.length) {
+      set({ isAutoPlaying: false })
+      return
+    }
+    const nextStep = activeTutorial.steps[nextIdx]
+    if (nextStep?.params) {
+      set({ ...nextStep.params } as any)
+      if (nextStep.params.particleCount !== undefined) {
+        set({ particles: randomParticles(nextStep.params.particleCount) })
+      }
+    }
+    set({ currentStepIndex: nextIdx })
+  },
+
+  prevStep: () => {
+    const { activeTutorial, currentStepIndex } = get()
+    if (!activeTutorial) return
+    const prevIdx = currentStepIndex - 1
+    if (prevIdx < 0) return
+    const prevStep = activeTutorial.steps[prevIdx]
+    if (prevStep?.params) {
+      set({ ...prevStep.params } as any)
+      if (prevStep.params.particleCount !== undefined) {
+        set({ particles: randomParticles(prevStep.params.particleCount) })
+      }
+    }
+    set({ currentStepIndex: prevIdx })
+  },
+
+  stopTutorial: () => {
+    set({ activeTutorial: null, currentStepIndex: 0, isAutoPlaying: false })
+  },
+
+  toggleAutoPlay: () => {
+    set((s) => ({ isAutoPlaying: !s.isAutoPlaying }))
+  },
+
+  getCurrentStep: () => {
+    const { activeTutorial, currentStepIndex } = get()
+    if (!activeTutorial) return null
+    return activeTutorial.steps[currentStepIndex] ?? null
   },
 }))
